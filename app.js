@@ -17,11 +17,11 @@ main().then(() => {
 async function main(){
     await mongoose.connect (MONGO_URL);
 }
-app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
+app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname,"/public")));
 
 app.get("/", (req, res) => {
@@ -97,13 +97,12 @@ app.delete("/listings/:id", wrapAsync(async (req, res) => {
 //     res.send("successfull testing");
 // });
 
-app.all("*",(req, res, next) => {
+app.use((req, res, next) => {
     next(new ExpressError(404, "Page Not Found"));
 });
 app.use((err, req, res, next) => {
     let { statusCode = 500, message = "Something went wrong" } = err;
-    res.status(statusCode).render("error.ejs", {message});
-    //res.status(statusCode).send(message);
+    res.status(statusCode).render("error", { message });
 });
 
 app.listen(3000, () => {
