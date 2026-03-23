@@ -1,0 +1,65 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="container mt-5">
+
+  <h2 class="mb-4 fw-bold">My Trips ✈️</h2>
+
+  <% if (bookings.length === 0) { %>
+    <div class="text-center mt-5">
+      <h5>No trips yet 😢</h5>
+      <a href="/listings" class="btn btn-dark mt-3">Explore Stays</a>
+    </div>
+  <% } %>
+
+  <div class="row g-4">
+
+    <% bookings.forEach(booking => { %>
+
+      <div class="col-lg-4 col-md-6 col-sm-12">
+
+        <div class="card trip-card shadow-sm border-0 h-100">
+
+          <!-- IMAGE -->
+          <img 
+            src="<%= booking.listing.image.url %>" 
+            class="card-img-top trip-img"
+            alt="trip image"
+          >
+
+          <!-- BODY -->
+          <div class="card-body">
+
+            <h5 class="fw-semibold">
+              <%= booking.listing.title %>
+            </h5>
+
+            <p class="text-muted mb-2">
+              📍 <%= booking.listing.location %>
+            </p>
+
+            <p class="mb-1">
+              <strong>From:</strong> 
+              <%= new Date(booking.checkIn).toDateString() %>
+            </p>
+
+            <p class="mb-2">
+              <strong>To:</strong> 
+              <%= new Date(booking.checkOut).toDateString() %>
+            </p>
+
+            <span class="badge 
+              <%= booking.status === 'upcoming' ? 'bg-success' : 'bg-secondary' %>">
+              <%= booking.status %>
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    <% }) %>
+
+  </div>
+
+</div>

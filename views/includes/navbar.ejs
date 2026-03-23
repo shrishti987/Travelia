@@ -1,16 +1,135 @@
-<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/"><i class="fa-regular fa-compass"></i></a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+<nav class="navbar navbar-expand-lg sticky-top custom-navbar">
+
+  <div class="container">
+
+    <!-- Logo -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <i class="fa-regular fa-compass brand-icon"></i>
+      <span class="brand-text">Travelia</span>
+    </a>
+
+    <!-- Mobile Toggle -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-link" href="/">Home</a>
-        <a class="nav-link" href="/listings">All Listings</a>
-        <a class="nav-link" href="/listings/new">Add new Listing</a>
-        
-      </div>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+
+      <!-- 🔍 Search Bar -->
+      <form class="search-bar-navbar mx-auto" action="/search" method="GET">
+        <input
+          type="search"
+          name="location"
+          placeholder="Search destinations..."
+        >
+        <button type="submit">
+          🔍
+        </button>
+      </form>
+
+      <!-- Right Menu -->
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+
+        <!-- Become Host -->
+        <li class="nav-item">
+          <a class="nav-link fw-semibold" href="/listings/new">
+            Become a Host
+          </a>
+        </li>
+
+        <% if (!currUser) { %>
+
+          <li class="nav-item">
+            <a class="nav-link" href="/login">Login</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="btn signup-btn ms-2" href="/signup">Signup</a>
+          </li>
+
+        <% } %>
+
+        <!-- 🌙 Theme -->
+        <li class="nav-item">
+          <button id="theme-toggle" class="btn theme-btn">
+            🌙
+          </button>
+        </li>
+
+        <% if (currUser) { %>
+
+        <!-- Profile -->
+        <li class="nav-item dropdown">
+
+          <a class="nav-link profile-icon"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown">
+
+            <i class="fa-solid fa-user"></i>
+
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end">
+
+            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+
+            <li><a class="dropdown-item" href="/mylistings">My Listings</a></li>
+            <li><a class="dropdown-item" href="/trips">✈️ My Trips</a></li>
+            <li>
+              <a href="/recommendations" class="dropdown-item">
+                ✨ Recommended
+              </a>
+            </li>
+
+            <li><hr class="dropdown-divider"></li>
+
+            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+
+          </ul>
+
+        </li>
+
+        <% } %>
+
+      </ul>
+
     </div>
+
   </div>
+
 </nav>
+
+<!-- CATEGORY BAR -->
+<div class="category-bar">
+
+  <div class="container d-flex justify-content-between flex-wrap text-center">
+
+    <a href="/category/Beach" class="category-item">
+      <div>🏖</div>
+      <small>Beach</small>
+    </a>
+
+    <a href="/category/Mountains" class="category-item">
+      <div>🏔</div>
+      <small>Mountains</small>
+    </a>
+
+    <a href="/category/City" class="category-item">
+      <div>🏙</div>
+      <small>City</small>
+    </a>
+
+    <a href="/category/Camping" class="category-item">
+      <div>🏕</div>
+      <small>Camping</small>
+    </a>
+
+    <a href="/category/Islands" class="category-item">
+      <div>🏝</div>
+      <small>Islands</small>
+    </a>
+
+  </div>
+
+</div>

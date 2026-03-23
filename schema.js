@@ -1,4 +1,5 @@
 const Joi = require("joi");
+
 module.exports.listingSchema = Joi.object({
     listing: Joi.object({
         title: Joi.string().required(),
@@ -6,6 +7,9 @@ module.exports.listingSchema = Joi.object({
         location: Joi.string().required(),
         country: Joi.string().required(),
         price: Joi.number().required().min(0),
+
+        category: Joi.string().required(),   // 🔥 ADD THIS LINE
+
         image: Joi.string().allow("", null),
     }).required(),
 });

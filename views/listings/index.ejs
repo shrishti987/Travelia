@@ -1,26 +1,526 @@
-<% layout("/layouts/boilerplate") %> 
-<h3> All listings</h3>
-<div class="row row-cols-lg-3 row-cols-md-3  row-cols-sm-1">
-    <% for(let listing of allListings) { %>
-        <a href="/listings/<%= listing._id %>" class="listing-link">
-            <div class="card col">
-                <img 
-                src="<%= listing.image?.url || 'https://via.placeholder.com/300' %>" 
-                class="card-img-top" 
-                alt="listing_image" style ="height: 20rem" />
-                <div class="card-img-overlay"></div>
-                <div class="card-body">
-                    <p class="card-text">
-                        <b><%= listing.title %> </b><br>
-                        <%= listing.price !== undefined 
-                        ? Number(listing.price).toLocaleString("en-IN", { 
-                        style: "currency", 
-                        currency: "INR" 
-                        }) 
-                        : "Not Available" %> /night
-                    </p>
-                </div>
-            </div>
-        </a>
+<% layout("layouts/boilerplate") %>
+
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  /* ── Design tokens ───────────────────────────────── */
+  :root {
+    --brand:        #FF385C;
+    --brand-dark:   #D9003A;
+    --surface:      #FFFFFF;
+    --bg:           #F9F5F0;          /* warm off-white — feels editorial */
+    --text-main:    #1A1A1A;
+    --text-sub:     #6B6B6B;
+    --border:       #E8E2D9;
+    --verified:     #00A699;
+    --risk:         #C13515;
+    --shadow-card:  0 2px 12px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.04);
+    --shadow-hover: 0 12px 40px rgba(0,0,0,.14);
+    --radius-img:   18px;
+    --radius-card:  20px;
+    --font-head:    'Cormorant Garamond', Georgia, serif;
+    --font-body:    'Jost', sans-serif;
+    --transition:   .28s cubic-bezier(.4,0,.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--text-main);
+  }
+
+  /* ── Page chrome ─────────────────────────────────── */
+  .index-page {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 40px 28px 100px;
+  }
+
+  /* ── Hero header ─────────────────────────────────── */
+  .index-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 48px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .index-hero-left {}
+  .index-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: 8px;
+  }
+  .index-headline {
+    font-family: var(--font-head);
+    font-size: clamp(30px, 5vw, 52px);
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--text-main);
+  }
+  .index-headline em { font-style: italic; color: var(--brand); }
+
+  .index-count {
+    font-size: 13px;
+    color: var(--text-sub);
+    font-weight: 400;
+    margin-top: 10px;
+  }
+
+  /* ── Category filter pills ───────────────────────── */
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 30px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sub);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition), background var(--transition);
+    user-select: none;
+  }
+  .filter-pill:hover,
+  .filter-pill.active {
+    border-color: var(--text-main);
+    color: var(--text-main);
+    background: #F0ECE6;
+  }
+  .filter-pill i { font-size: 14px; }
+
+  /* ── Recommendation banner ───────────────────────── */
+  .recommendation-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #FFF5F0, #FFF0F3);
+    border: 1.5px solid #FFDDD5;
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    color: var(--brand-dark);
+    font-weight: 500;
+  }
+  .recommendation-banner i { font-size: 20px; }
+
+  /* ── Grid ────────────────────────────────────────── */
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+  @media (max-width: 1200px) { .listings-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 820px)  { .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; } }
+  @media (max-width: 500px)  { .listings-grid { grid-template-columns: 1fr; } }
+
+  /* ── Skeleton ────────────────────────────────────── */
+  #skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 1200px) { #skeleton-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 820px)  { #skeleton-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px)  { #skeleton-grid { grid-template-columns: 1fr; } }
+
+  .skel-card { border-radius: var(--radius-card); overflow: hidden; }
+  .skel-img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(90deg, #EDE8E0 25%, #E4DDD4 50%, #EDE8E0 75%);
+    background-size: 200% 100%;
+    border-radius: var(--radius-img);
+    animation: shimmer 1.4s infinite;
+  }
+  .skel-line {
+    height: 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    background: linear-gradient(90deg, #EDE8E0 25%, #E4DDD4 50%, #EDE8E0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  .skel-line.short { width: 55%; margin-top: 8px; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* ── Card ────────────────────────────────────────── */
+  .listing-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .listing-card {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: transform var(--transition), box-shadow var(--transition);
+    cursor: pointer;
+    animation: fadeUp .45s both;
+  }
+  .listing-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* staggered fade-up for each card */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .listing-card:nth-child(1)  { animation-delay: .04s }
+  .listing-card:nth-child(2)  { animation-delay: .09s }
+  .listing-card:nth-child(3)  { animation-delay: .14s }
+  .listing-card:nth-child(4)  { animation-delay: .18s }
+  .listing-card:nth-child(5)  { animation-delay: .22s }
+  .listing-card:nth-child(6)  { animation-delay: .26s }
+  .listing-card:nth-child(7)  { animation-delay: .30s }
+  .listing-card:nth-child(8)  { animation-delay: .34s }
+  .listing-card:nth-child(n+9){ animation-delay: .38s }
+
+  /* ── Image container ─────────────────────────────── */
+  .card-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    border-radius: var(--radius-img);
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .55s cubic-bezier(.4,0,.2,1);
+  }
+  .listing-card:hover .card-img-wrap img { transform: scale(1.06); }
+
+  /* top-left badges */
+  .card-badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    letter-spacing: .02em;
+  }
+  .badge-verified {
+    background: rgba(0,166,153,.88);
+    color: #fff;
+  }
+  .badge-risk {
+    background: rgba(193,53,21,.88);
+    color: #fff;
+  }
+  .badge-rating {
+    background: rgba(255,255,255,.88);
+    color: var(--text-main);
+  }
+
+  /* wishlist heart */
+  .wishlist-wrap {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+  .wishlist-wrap form { margin: 0; }
+  .heart-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: transform .2s, background .2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    color: var(--brand);
+  }
+  .heart-btn:hover { transform: scale(1.18); background: #fff; }
+
+  /* ── Card body ───────────────────────────────────── */
+  .card-body-custom {
+    padding: 14px 16px 18px;
+  }
+  .card-location {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-sub);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .card-location i { color: var(--brand); font-size: 10px; }
+
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-main);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-price {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .card-price .amount {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .card-price .per {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-sub);
+  }
+
+  /* CTA chip */
+  .card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 30px;
+    background: var(--brand);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: opacity var(--transition), transform var(--transition);
+    white-space: nowrap;
+  }
+  .listing-card:hover .card-cta {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── Empty state ─────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-sub);
+  }
+  .empty-state i {
+    font-size: 48px;
+    color: var(--border);
+    margin-bottom: 20px;
+    display: block;
+  }
+  .empty-state h3 {
+    font-family: var(--font-head);
+    font-size: 26px;
+    color: var(--text-main);
+    margin-bottom: 10px;
+  }
+
+  /* ── Responsive tweaks ───────────────────────────── */
+  @media (max-width: 600px) {
+    .index-page { padding: 24px 14px 70px; }
+    .card-cta { display: none; }
+  }
+</style>
+
+<div class="index-page">
+
+  <!-- Hero header -->
+  <div class="index-hero">
+    <div class="index-hero-left">
+      <p class="index-eyebrow"><i class="fa-solid fa-compass"></i> &nbsp;Discover</p>
+      <h1 class="index-headline">Explore <em>Stays</em><br>You'll Love</h1>
+      <p class="index-count">
+        <% if (typeof listings !== 'undefined') { %>
+          <%= listings.length %> place<%= listings.length !== 1 ? 's' : '' %> to stay
+        <% } %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Category filter pills (UI only) -->
+  <div class="filter-row">
+    <div class="filter-pill active"><i class="fa-solid fa-grip"></i> All</div>
+    <div class="filter-pill"><i class="fa-solid fa-mountain-sun"></i> Mountains</div>
+    <div class="filter-pill"><i class="fa-solid fa-umbrella-beach"></i> Beach</div>
+    <div class="filter-pill"><i class="fa-solid fa-city"></i> City</div>
+    <div class="filter-pill"><i class="fa-solid fa-tree"></i> Nature</div>
+    <div class="filter-pill"><i class="fa-solid fa-water"></i> Lakefront</div>
+    <div class="filter-pill"><i class="fa-solid fa-star"></i> Top rated</div>
+  </div>
+
+  <!-- Recommendation banner -->
+  <% if (typeof isRecommendation !== 'undefined') { %>
+    <div class="recommendation-banner">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Curated just for you — based on your preferences and past stays.</span>
+    </div>
+  <% } %>
+
+  <!-- Skeleton loader (hidden after load) -->
+  <div id="skeleton-grid">
+    <% for(let i = 0; i < 8; i++) { %>
+      <div class="skel-card">
+        <div class="skel-img"></div>
+        <div class="skel-line" style="width:70%;margin-top:14px"></div>
+        <div class="skel-line short"></div>
+        <div class="skel-line" style="width:40%"></div>
+      </div>
     <% } %>
+  </div>
+
+  <!-- Listings grid -->
+  <div class="listings-grid" id="listings-grid" style="display:none">
+
+    <% if (typeof listings !== 'undefined' && listings.length > 0) { %>
+
+      <% for(let listing of listings) { %>
+
+        <a href="/listings/<%= listing._id %>" class="listing-link">
+          <div class="listing-card">
+
+            <!-- Image -->
+            <div class="card-img-wrap">
+              <img
+                src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600' %>"
+                alt="<%= listing.title %>"
+                loading="lazy"
+              >
+
+              <!-- Badges -->
+              <div class="card-badges">
+                <span class="badge-pill badge-rating">
+                  <i class="fa-solid fa-star" style="color:#F59E0B;font-size:10px"></i> 4.7
+                </span>
+                <% if (!listing.isFraud) { %>
+                  <span class="badge-pill badge-verified">
+                    <i class="fa-solid fa-circle-check"></i> Verified
+                  </span>
+                <% } else { %>
+                  <span class="badge-pill badge-risk">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Risk
+                  </span>
+                <% } %>
+              </div>
+
+              <!-- Wishlist heart -->
+              <div class="wishlist-wrap">
+                <form action="/wishlist/<%= listing._id %>" method="POST" onclick="event.stopPropagation()">
+                  <button type="submit" class="heart-btn" title="Save to wishlist">
+                    <i class="fa-solid fa-heart"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Card body -->
+            <div class="card-body-custom">
+              <p class="card-location">
+                <i class="fa-solid fa-location-dot"></i>
+                <%= listing.location %>, <%= listing.country %>
+              </p>
+              <p class="card-title"><%= listing.title %></p>
+              <div class="card-footer-row">
+                <div class="card-price">
+                  <span class="amount">
+                    ₹<%= listing.price !== undefined ? Number(listing.price).toLocaleString("en-IN") : "N/A" %>
+                  </span>
+                  <span class="per">&nbsp;/ night</span>
+                </div>
+                <span class="card-cta">
+                  View <i class="fa-solid fa-arrow-right" style="font-size:10px"></i>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </a>
+
+      <% } %>
+
+    <% } else { %>
+
+      <div class="empty-state" style="grid-column:1/-1">
+        <i class="fa-regular fa-face-sad-tear"></i>
+        <h3>No listings found</h3>
+        <p>Try adjusting your filters or check back later.</p>
+      </div>
+
+    <% } %>
+
+  </div>
+
 </div>
+
+<script>
+  window.addEventListener("load", function () {
+    const skeleton = document.getElementById("skeleton-grid");
+    const grid     = document.getElementById("listings-grid");
+    if (skeleton) skeleton.style.display = "none";
+    if (grid)     grid.style.display     = "grid";
+  });
+
+  // Category pill toggle (UI only)
+  document.querySelectorAll(".filter-pill").forEach(pill => {
+    pill.addEventListener("click", function () {
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      this.classList.add("active");
+    });
+  });
+</script>
