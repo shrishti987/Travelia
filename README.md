@@ -1,4 +1,4 @@
-# 🌍 Travelia – Smart Travel Booking Platform
+# 🌍 VoyageIQ – Smart Travel Booking Platform
 Travelia is a full-stack web application inspired by Airbnb that allows users to explore, book, and manage travel stays with intelligent features like recommendations and fraud detection.
 
 ## ✨ Features
