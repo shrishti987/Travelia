@@ -69,7 +69,7 @@ travelia/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/travelia.git
+git clone https://github.com/your-username/VoyageIQ.git
 cd travelia
 2. Install dependencies
 npm install
