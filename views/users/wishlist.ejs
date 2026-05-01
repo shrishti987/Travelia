@@ -1,0 +1,39 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <p class="eyebrow">Saved stays</p>
+    <h1>Your wishlist</h1>
+    <p>Keep track of places you want to book later.</p>
+  </div>
+
+  <% if (!listings || listings.length === 0) { %>
+    <div class="empty-panel">
+      <h2>No saved stays yet</h2>
+      <p>Browse listings and save the ones you want to compare.</p>
+      <a href="/listings" class="btn btn-dark">Explore stays</a>
+    </div>
+  <% } else { %>
+    <div class="listing-grid">
+      <% listings.forEach((listing) => { %>
+        <article class="stay-card">
+          <a href="/listings/<%= listing._id %>" class="image-link">
+            <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700' %>" alt="<%= listing.title %>">
+          </a>
+          <form action="/wishlist/<%= listing._id %>/toggle" method="POST" class="floating-form">
+            <button class="icon-button saved" type="submit" aria-label="Remove from wishlist">
+              <i class="fa-solid fa-heart"></i>
+            </button>
+          </form>
+          <div class="stay-card-body">
+            <div>
+              <p class="card-kicker"><%= listing.location %>, <%= listing.country %></p>
+              <h2><a href="/listings/<%= listing._id %>"><%= listing.title %></a></h2>
+            </div>
+            <p class="price-line">Rs. <%= Number(listing.price).toLocaleString("en-IN") %> <span>/ night</span></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>

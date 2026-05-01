@@ -88,6 +88,9 @@ createdAt: {
 
 });
 
+listingSchema.index({ title: "text", description: "text", location: "text", country: "text" });
+listingSchema.index({ price: 1, location: 1, category: 1 });
+
 const Listing = mongoose.model("Listing", listingSchema);
 
 module.exports = Listing;

@@ -1,0 +1,17 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="page-shell narrow-shell">
+  <div class="result-panel surface-panel">
+    <div class="result-mark success-mark"><i class="fa-solid fa-check"></i></div>
+    <h1>Booking confirmed</h1>
+    <p>Your stay at <strong><%= booking.listing.title %></strong> is reserved.</p>
+    <div class="summary-line">
+      <span>Total paid</span>
+      <strong>Rs. <%= Number(booking.totalPrice).toLocaleString("en-IN") %></strong>
+    </div>
+    <div class="action-row">
+      <a href="/trips" class="btn btn-dark">View trips</a>
+      <a href="/listings" class="btn btn-outline-dark">Explore more stays</a>
+    </div>
+  </div>
+</section>

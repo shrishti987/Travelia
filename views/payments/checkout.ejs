@@ -1,0 +1,88 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="page-shell checkout-page">
+  <div class="page-heading">
+    <p class="eyebrow">Secure checkout</p>
+    <h1>Confirm your booking</h1>
+    <p>Review the stay details and complete payment to reserve your trip.</p>
+  </div>
+
+  <div class="checkout-grid">
+    <article class="surface-panel">
+      <img
+        src="<%= booking.listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900' %>"
+        alt="<%= booking.listing.title %>"
+        class="checkout-image"
+      >
+      <div class="panel-body">
+        <h2><%= booking.listing.title %></h2>
+        <p class="muted"><%= booking.listing.location %>, <%= booking.listing.country %></p>
+        <div class="metric-row">
+          <span><strong><%= booking.nights || 1 %></strong> night<%= (booking.nights || 1) !== 1 ? "s" : "" %></span>
+          <span><strong>Rs. <%= Number(booking.totalPrice).toLocaleString("en-IN") %></strong></span>
+        </div>
+      </div>
+    </article>
+
+    <aside class="surface-panel payment-panel">
+      <div class="panel-body">
+        <h2>Payment summary</h2>
+        <div class="summary-line">
+          <span>Stay total</span>
+          <strong>Rs. <%= Number(booking.totalPrice).toLocaleString("en-IN") %></strong>
+        </div>
+        <div class="summary-line">
+          <span>Payment status</span>
+          <strong class="status-pill status-pending"><%= booking.paymentStatus %></strong>
+        </div>
+
+        <% if (payment.paymentEnabled) { %>
+          <button id="razorpay-pay" class="btn btn-dark w-100 mt-3">Pay securely</button>
+          <form id="payment-verify-form" action="/payments/verify" method="POST" class="d-none">
+            <input type="hidden" name="bookingId" value="<%= booking._id %>">
+            <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+            <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+          </form>
+        <% } else { %>
+          <div class="alert alert-warning mt-3">
+            <%= payment.reason %> Add Razorpay credentials to enable live payment.
+          </div>
+          <a href="/trips" class="btn btn-outline-dark w-100 mt-2">View booking history</a>
+        <% } %>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<% if (payment.paymentEnabled) { %>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    document.getElementById("razorpay-pay").addEventListener("click", function () {
+      const checkout = new Razorpay({
+        key: "<%= payment.keyId %>",
+        amount: "<%= payment.order.amount %>",
+        currency: "INR",
+        name: "Travelia",
+        description: "<%= booking.listing.title.replace(/"/g, '\\"') %>",
+        order_id: "<%= payment.order.id %>",
+        handler: function (response) {
+          document.getElementById("razorpay_order_id").value = response.razorpay_order_id;
+          document.getElementById("razorpay_payment_id").value = response.razorpay_payment_id;
+          document.getElementById("razorpay_signature").value = response.razorpay_signature;
+          document.getElementById("payment-verify-form").submit();
+        },
+        modal: {
+          ondismiss: function () {
+            window.location.href = "/payments/failure/<%= booking._id %>";
+          }
+        },
+        theme: {
+          color: "#111827"
+        }
+      });
+
+      checkout.open();
+    });
+  </script>
+<% } %>

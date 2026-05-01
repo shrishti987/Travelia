@@ -1,0 +1,17 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="page-shell narrow-shell">
+  <div class="result-panel surface-panel">
+    <div class="result-mark failure-mark"><i class="fa-solid fa-xmark"></i></div>
+    <h1>Payment not completed</h1>
+    <p>Your booking is saved as pending. You can retry payment from checkout.</p>
+    <div class="summary-line">
+      <span>Amount due</span>
+      <strong>Rs. <%= Number(booking.totalPrice).toLocaleString("en-IN") %></strong>
+    </div>
+    <div class="action-row">
+      <a href="/payments/<%= booking._id %>/checkout" class="btn btn-dark">Retry payment</a>
+      <a href="/trips" class="btn btn-outline-dark">View trips</a>
+    </div>
+  </div>
+</section>

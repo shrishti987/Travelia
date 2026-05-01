@@ -1,7 +1,8 @@
 const express = require("express");
+require("dotenv").config({ quiet: true });
 const app = express();
 const mongoose = require("mongoose");
-const MONGO_URL = "mongodb://127.0.0.1:27017/travelia";
+const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/travelia";
 
 const Listing = require("./models/listing.js");
 
@@ -19,6 +20,10 @@ const upload = multer({ storage });
 
 const Review = require("./models/review.js");
 const Booking = require("./models/booking");
+const paymentRoutes = require("./routes/payments");
+const reviewRoutes = require("./routes/reviews");
+const wishlistRoutes = require("./routes/wishlist");
+const dashboardRoutes = require("./routes/dashboard");
 
 /* AUTH */
 const passport = require("passport");
@@ -27,6 +32,8 @@ const User = require("./models/user");
 const session = require("express-session");
 
 /* ---------------- DATABASE ---------------- */
+mongoose.set("strictQuery", true);
+
 main()
 .then(() => console.log("Connected to DB"))
 .catch(err => console.log(err));
@@ -48,9 +55,13 @@ app.use(express.static(path.join(__dirname, "/public")));
 
 /* SESSION */
 app.use(session({
-  secret: "mysupersecretcode",
+  secret: process.env.SESSION_SECRET || "mysupersecretcode",
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  }
 }));
 
 const flash = require("connect-flash");
@@ -68,6 +79,8 @@ app.use(passport.session());
 
 app.use((req, res, next) => {
   res.locals.currUser = req.user;
+  res.locals.wishlistIds = req.user?.wishlist?.map(id => id.toString()) || [];
+  res.locals.razorpayKeyId = process.env.RAZORPAY_KEY_ID || "";
   next();
 });
 
@@ -128,6 +141,12 @@ app.get("/signup", (req, res) => res.render("users/signup"));
 app.post("/signup", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!password || password.length < 8) {
+      req.flash("error", "Password must be at least 8 characters long.");
+      return res.redirect("/signup");
+    }
+
     const newUser = new User({ email, username });
 
     const registeredUser = await User.register(newUser, password);
@@ -138,14 +157,18 @@ app.post("/signup", async (req, res, next) => {
     });
 
   } catch (e) {
-    next(e);
+    req.flash("error", e.message);
+    res.redirect("/signup");
   }
 });
 
 app.get("/login", (req, res) => res.render("users/login"));
 
 app.post("/login",
-  passport.authenticate("local", { failureRedirect: "/login" }),
+  passport.authenticate("local", {
+    failureRedirect: "/login",
+    failureFlash: "Invalid username or password."
+  }),
   (req, res) => res.redirect("/listings")
 );
 
@@ -174,27 +197,36 @@ app.get("/mylistings", isLoggedIn, wrapAsync(async (req, res) => {
 /* SEARCH */
 
 app.get("/search", wrapAsync(async (req, res) => {
-  const { location, country, minPrice, maxPrice } = req.query;
-  let query = {};
+  const { q, location, country, minPrice, maxPrice, category } = req.query;
+  const query = {};
 
+  if (q) {
+    query.$or = [
+      { title: { $regex: q, $options: "i" } },
+      { description: { $regex: q, $options: "i" } },
+      { location: { $regex: q, $options: "i" } },
+      { country: { $regex: q, $options: "i" } }
+    ];
+  }
   if (location) query.location = { $regex: location, $options: "i" };
   if (country) query.country = { $regex: country, $options: "i" };
+  if (category) query.category = category;
 
   if (minPrice || maxPrice) {
     query.price = {};
-    if (minPrice) query.price.$gte = minPrice;
-    if (maxPrice) query.price.$lte = maxPrice;
+    if (minPrice) query.price.$gte = Number(minPrice);
+    if (maxPrice) query.price.$lte = Number(maxPrice);
   }
 
-  const listings = await Listing.find(query);
-  res.render("listings/index", { listings });
+  const listings = await Listing.find(query).sort({ createdAt: -1 });
+  res.render("listings/index", { listings, filters: req.query });
 }));
 
 /* INDEX */
 
 app.get("/listings", wrapAsync(async (req, res) => {
-  const listings = await Listing.find({});
-  res.render("listings/index", { listings });
+  const listings = await Listing.find({}).sort({ createdAt: -1 });
+  res.render("listings/index", { listings, filters: {} });
 }));
 
 /* CATEGORY (FIXED) */
@@ -262,7 +294,10 @@ app.get("/listings/new", isLoggedIn, (req, res) => {
 /* SHOW */
 
 app.get("/listings/:id", wrapAsync(async (req, res) => {
-  const listing = await Listing.findById(req.params.id).populate("reviews");
+  const listing = await Listing.findById(req.params.id).populate({
+    path: "reviews",
+    populate: { path: "author" }
+  });
 
   if (!listing) throw new ExpressError(404, "Listing not found");
 
@@ -318,12 +353,14 @@ if (existingBooking) {
       user: req.user._id,
       checkIn,
       checkOut,
-      totalPrice
+      nights: diffDays,
+      totalPrice,
+      paymentStatus: "pending"
     });
 
     await newBooking.save();
 
-    res.redirect("/trips");
+    res.redirect(`/payments/${newBooking._id}/checkout`);
   })
 );
 
@@ -357,7 +394,10 @@ if (newListing.price < 500) {
     newListing.owner = req.user._id;
 
     if (req.file) {
-      newListing.image = req.file.path;
+      newListing.image = {
+        url: req.file.path,
+        filename: req.file.filename
+      };
     }
 
     const fraud = checkFraud(newListing);
@@ -385,9 +425,17 @@ app.put("/listings/:id",
   isLoggedIn,
   validateListing,
   wrapAsync(async (req, res) => {
+    const listingData = { ...req.body.listing };
+
+    if (typeof listingData.image === "string") {
+      listingData.image = {
+        url: listingData.image,
+        filename: "external-image"
+      };
+    }
 
     await Listing.findByIdAndUpdate(req.params.id, {
-      ...req.body.listing
+      ...listingData
     });
 
     res.redirect(`/listings/${req.params.id}`);
@@ -411,15 +459,21 @@ app.post("/wishlist/:id", isLoggedIn, wrapAsync(async (req, res) => {
   const user = await User.findById(req.user._id);
   const listingId = req.params.id;
 
-  // Add if not already present
-  if (!user.wishlist.includes(listingId)) {
-    user.wishlist.push(listingId);
+  if (user.wishlist.some((item) => item.equals(listingId))) {
+    user.wishlist.pull(listingId);
+  } else {
+    user.wishlist.addToSet(listingId);
   }
 
   await user.save();
 
-  res.redirect("/listings");
+  res.redirect(req.get("Referrer") || "/listings");
 }));
+
+app.use("/payments", paymentRoutes);
+app.use("/listings/:id/reviews", reviewRoutes);
+app.use("/wishlist", wishlistRoutes);
+app.use("/dashboard", dashboardRoutes);
 /* ERROR */
 
 app.use((req, res, next) => {

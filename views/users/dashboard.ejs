@@ -1,0 +1,56 @@
+<% layout("/layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading">
+    <p class="eyebrow">Dashboard</p>
+    <h1>Your travel activity</h1>
+    <p>Bookings, payments, and saved stays in one place.</p>
+  </div>
+
+  <div class="dashboard-metrics">
+    <div class="metric-card">
+      <span>Bookings</span>
+      <strong><%= bookings.length %></strong>
+    </div>
+    <div class="metric-card">
+      <span>Wishlist</span>
+      <strong><%= wishlist.length %></strong>
+    </div>
+    <div class="metric-card">
+      <span>Transactions</span>
+      <strong><%= transactions.length %></strong>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Recent bookings</h2>
+        <% if (bookings.length === 0) { %>
+          <p class="muted">No bookings yet.</p>
+        <% } %>
+        <% bookings.slice(0, 5).forEach((booking) => { %>
+          <a class="history-row" href="/listings/<%= booking.listing?._id %>">
+            <span><%= booking.listing?.title || "Listing unavailable" %></span>
+            <strong><%= booking.paymentStatus %></strong>
+          </a>
+        <% }) %>
+      </div>
+    </section>
+
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Recent payments</h2>
+        <% if (transactions.length === 0) { %>
+          <p class="muted">No payment records yet.</p>
+        <% } %>
+        <% transactions.forEach((transaction) => { %>
+          <div class="history-row">
+            <span><%= transaction.listing?.title || "Travelia booking" %></span>
+            <strong>Rs. <%= Number(transaction.amount).toLocaleString("en-IN") %></strong>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  </div>
+</section>

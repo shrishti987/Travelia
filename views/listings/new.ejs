@@ -1,127 +1,53 @@
 <% layout("layouts/boilerplate") %>
 
-<div class="row mt-4">
-<div class="col-lg-8 offset-lg-2">
+<section class="page-shell narrow-shell">
+  <div class="page-heading">
+    <p class="eyebrow">Host on Travelia</p>
+    <h1>Create a listing</h1>
+    <p>Add the details travelers need to confidently book your stay.</p>
+  </div>
 
-<h2 class="mb-4 fw-bold">Create a New Listing</h2>
+  <form method="POST" action="/listings" enctype="multipart/form-data" class="surface-panel panel-body auth-form">
+    <label>Title
+      <input name="listing[title]" placeholder="Modern hillside villa" type="text" class="form-control" required>
+    </label>
 
-<form method="POST" action="/listings" enctype="multipart/form-data">
+    <label>Description
+      <textarea name="listing[description]" class="form-control" rows="4" placeholder="Describe the stay, amenities, and nearby highlights" required></textarea>
+    </label>
 
-<div class="mb-3">
-<label class="form-label">Title</label>
-<input 
-name="listing[title]"
-placeholder="Add a catchy title"
-type="text"
-class="form-control"
-required
->
-</div>
+    <label>Upload image
+      <input type="file" name="image" class="form-control" accept="image/*">
+    </label>
 
-<div class="mb-3">
-<label class="form-label">Description</label>
-<textarea
-name="listing[description]"
-class="form-control"
-rows="4"
-placeholder="Describe your place..."
-required
-></textarea>
-</div>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label>Price
+          <input name="listing[price]" placeholder="4500" type="number" class="form-control" min="0" required>
+        </label>
+      </div>
+      <div class="col-md-8">
+        <label>Country
+          <input name="listing[country]" placeholder="India" type="text" class="form-control" required>
+        </label>
+      </div>
+    </div>
 
-<div class="mb-3">
-<label class="form-label">Upload Image</label>
+    <label>Category
+      <select name="listing[category]" class="form-select" required>
+        <option value="">Select category</option>
+        <option value="Beach">Beach</option>
+        <option value="Mountains">Mountains</option>
+        <option value="City">City</option>
+        <option value="Camping">Camping</option>
+        <option value="Islands">Islands</option>
+      </select>
+    </label>
 
-<input 
-type="file"
-name="image"
-class="form-control"
-accept="image/*"
-onchange="previewImage(event)"
->
+    <label>Location
+      <input name="listing[location]" placeholder="Dehradun, Uttarakhand" type="text" class="form-control" required>
+    </label>
 
-<small class="text-muted">Upload JPG / PNG image</small>
-
-<img 
-id="imagePreview"
-class="img-fluid mt-3 rounded shadow"
-style="display:none; max-height:250px;"
->
-
-</div>
-
-<div class="row">
-
-<div class="col-md-4 mb-3">
-<label class="form-label">Price (₹)</label>
-<input
-name="listing[price]"
-placeholder="1200"
-type="number"
-class="form-control"
-required
->
-</div>
-
-<div class="col-md-8 mb-3">
-<label class="form-label">Country</label>
-<input
-name="listing[country]"
-placeholder="India"
-type="text"
-class="form-control"
-required
->
-</div>
-
-</div>
-
-<div class="mb-3">
-<label class="form-label">Category</label>
-
-<select name="listing[category]" class="form-select" required>
-
-<option value="">Select Category</option>
-<option value="Beach">🏖 Beach</option>
-<option value="Mountains">🏔 Mountains</option>
-<option value="City">🏙 City</option>
-<option value="Camping">🏕 Camping</option>
-<option value="Islands">🏝 Islands</option>
-
-</select>
-
-</div>
-
-<div class="mb-3">
-<label class="form-label">Location</label>
-<input
-name="listing[location]"
-placeholder="Dehradun, Uttarakhand"
-type="text"
-class="form-control"
-required
->
-</div>
-
-<button class="btn btn-danger add-btn mt-3 px-4">
-Add Listing
-</button>
-
-</form>
-
-</div>
-</div>
-
-<script>
-
-function previewImage(event){
-
-const preview = document.getElementById("imagePreview");
-
-preview.src = URL.createObjectURL(event.target.files[0]);
-
-preview.style.display = "block";
-
-}
-
-</script>
+    <button class="btn btn-dark" type="submit">Add listing</button>
+  </form>
+</section>
