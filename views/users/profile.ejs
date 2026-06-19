@@ -1,13 +1,22 @@
 <% layout("layouts/boilerplate") %>
+<% const roleId = currUser.role === "guest" ? "tourist" : currUser.role; %>
 
 <section class="page-shell narrow-shell">
   <div class="surface-panel">
-    <div class="panel-body">
+    <div class="profile-cover"></div>
+    <div class="panel-body profile-panel">
+      <img src="<%= currUser.profileImage %>" alt="<%= currUser.username %>" class="profile-avatar">
       <p class="eyebrow">Account</p>
       <h1><%= currUser.username %></h1>
       <p class="muted"><%= currUser.email %></p>
+      <div class="detail-list">
+        <span><strong>Role</strong><%= roleId %></span>
+        <span><strong>Loyalty</strong><%= (currUser.loyaltyPoints || 1200).toLocaleString("en-IN") %> points</span>
+        <span><strong>Verification</strong><%= currUser.isVerified ? "Verified" : "Pending" %></span>
+      </div>
       <div class="action-row mt-4">
         <a href="/dashboard" class="btn btn-dark">Open dashboard</a>
+        <a href="/roles/<%= roleId %>" class="btn btn-outline-dark">Role console</a>
         <a href="/mylistings" class="btn btn-outline-dark">My listings</a>
       </div>
     </div>

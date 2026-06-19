@@ -1,0 +1,35 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Role dashboards</p>
+      <h1>Purpose-built workspaces for every Travelia user.</h1>
+      <p>Tourists, hosts, vendors, event organizers, and admins share one ecosystem with role-based controls.</p>
+    </div>
+    <a href="/signup" class="btn btn-dark"><i class="fa-solid fa-user-plus"></i> Join Travelia</a>
+  </div>
+
+  <div class="role-tabs">
+    <% roles.forEach((role) => { %>
+      <a href="/roles/<%= role.id %>" class="<%= activeRole === role.id ? 'active' : '' %>"><%= role.label %></a>
+    <% }) %>
+  </div>
+
+  <% const role = roles.find((item) => item.id === activeRole) || roles[0]; %>
+  <div class="role-console surface-panel">
+    <div class="panel-body">
+      <p class="eyebrow"><%= role.label %> console</p>
+      <h2><%= role.metric %></h2>
+      <strong class="console-value"><%= role.value %></strong>
+      <div class="console-actions">
+        <% role.actions.forEach((action) => { %>
+          <span><i class="fa-solid fa-check"></i> <%= action %></span>
+        <% }) %>
+      </div>
+    </div>
+    <div class="console-preview">
+      <div class="mini-map travelia-mini-map" data-lat="30.3165" data-lng="78.0322"></div>
+    </div>
+  </div>
+</section>

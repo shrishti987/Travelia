@@ -1,29 +1,121 @@
 <% layout("/layouts/boilerplate") %>
 
-<section class="home-hero">
-  <div class="home-hero-content">
-    <p class="eyebrow">Travelia</p>
-    <h1>Book distinctive stays with confidence.</h1>
-    <p>Explore verified homes, save favorites, review trips, and pay securely from one clean travel workspace.</p>
-    <form action="/search" method="GET" class="home-search">
-      <input type="search" name="q" placeholder="Search destination or stay" class="form-control">
-      <button class="btn btn-dark" type="submit">Search</button>
-    </form>
+<section class="venture-hero">
+  <div class="hero-content">
+    <p class="eyebrow">AI-powered travel ecosystem</p>
+    <h1>Travelia</h1>
+    <p class="hero-copy">Discover stays, activities, events, and local products with trip plans that adapt to weather, budget, reviews, safety, and community impact.</p>
+    <div class="hero-actions">
+      <a href="/planner" class="btn btn-light"><i class="fa-solid fa-wand-magic-sparkles"></i> Start AI plan</a>
+      <a href="/listings" class="btn btn-outline-light"><i class="fa-solid fa-magnifying-glass-location"></i> Explore stays</a>
+    </div>
   </div>
+
+  <form action="/planner" method="POST" class="ai-planner-card">
+    <div>
+      <p class="eyebrow">Trip command center</p>
+      <h2>Build your next itinerary</h2>
+    </div>
+    <label>
+      Destination
+      <input name="destination" placeholder="Goa, Bali, Himachal, Tokyo" value="Himachal Pradesh">
+    </label>
+    <div class="planner-inline">
+      <label>
+        Days
+        <input type="number" name="days" min="2" max="10" value="4">
+      </label>
+      <label>
+        Style
+        <select name="vibe">
+          <option value="culture">Culture</option>
+          <option value="nature">Nature</option>
+          <option value="adventure">Adventure</option>
+          <option value="luxury">Luxury</option>
+        </select>
+      </label>
+    </div>
+    <button class="btn btn-dark" type="submit"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate plan</button>
+  </form>
 </section>
 
-<section class="page-shell">
-  <div class="dashboard-metrics">
-    <div class="metric-card"><span>Verified stays</span><strong>Curated</strong></div>
-    <div class="metric-card"><span>Payments</span><strong>Secure</strong></div>
-    <div class="metric-card"><span>Planning</span><strong>Simple</strong></div>
+<section class="page-shell platform-shell">
+  <nav class="ecosystem-nav" aria-label="Travelia ecosystem">
+    <a href="/listings"><i class="fa-solid fa-bed"></i><span>Stays</span></a>
+    <a href="/experiences"><i class="fa-solid fa-person-hiking"></i><span>Activities</span></a>
+    <a href="/events"><i class="fa-solid fa-ticket"></i><span>Events</span></a>
+    <a href="/marketplace"><i class="fa-solid fa-store"></i><span>Marketplace</span></a>
+    <a href="/impact"><i class="fa-solid fa-leaf"></i><span>Impact</span></a>
+    <a href="/sos"><i class="fa-solid fa-kit-medical"></i><span>SOS</span></a>
+  </nav>
+
+  <div class="command-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
+        <div class="split-heading">
+          <div>
+            <p class="eyebrow">Smart recommendations</p>
+            <h2>Best trips for this week</h2>
+          </div>
+          <a href="/planner" class="text-link">Personalize</a>
+        </div>
+        <div class="destination-stack">
+          <% destinations.forEach((destination) => { %>
+            <a class="destination-row" href="<%= destination.href %>">
+              <img src="<%= destination.image %>" alt="<%= destination.name %>">
+              <div>
+                <strong><%= destination.name %></strong>
+                <span><%= destination.location %> - <%= destination.weather %></span>
+                <small><%= destination.tags.join(" / ") %></small>
+              </div>
+              <b><%= destination.match %>%</b>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <section class="surface-panel map-panel">
+      <div class="travelia-mini-map" data-lat="30.3165" data-lng="78.0322"></div>
+      <div class="map-caption">
+        <span>Live map preview</span>
+        <strong>Stays, events, guides, and vendors in one destination graph.</strong>
+      </div>
+    </section>
   </div>
-  <div class="split-heading page-heading">
-    <div>
-      <p class="eyebrow">Start browsing</p>
-      <h1>Premium stays, practical tools.</h1>
-      <p>Travelia now supports wishlists, booking history, reviews, filters, and payment-ready reservations.</p>
-    </div>
-    <a href="/listings" class="btn btn-dark">Explore listings</a>
+
+  <div class="section-heading">
+    <p class="eyebrow">Book the full journey</p>
+    <h2>A single ecosystem from inspiration to checkout.</h2>
   </div>
+
+  <div class="listing-grid">
+    <% experiences.forEach((experience) => { %>
+      <article class="venture-card">
+        <a href="/experiences" class="image-link">
+          <img src="<%= experience.image %>" alt="<%= experience.title %>">
+        </a>
+        <div class="card-badges">
+          <span><i class="fa-solid fa-bolt"></i> <%= experience.score %>% fit</span>
+        </div>
+        <div class="stay-card-body">
+          <div>
+            <p class="card-kicker"><%= experience.type %> - <%= experience.location %></p>
+            <h2><%= experience.title %></h2>
+          </div>
+          <p class="price-line">Rs. <%= experience.price.toLocaleString("en-IN") %></p>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+
+  <section class="impact-strip">
+    <% impactMetrics.slice(0, 3).forEach((metric) => { %>
+      <article>
+        <span><%= metric.label %></span>
+        <strong><%= metric.value %></strong>
+        <p><%= metric.detail %></p>
+      </article>
+    <% }) %>
+  </section>
 </section>

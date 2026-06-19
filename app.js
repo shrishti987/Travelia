@@ -21,9 +21,11 @@ const upload = multer({ storage });
 const Review = require("./models/review.js");
 const Booking = require("./models/booking");
 const paymentRoutes = require("./routes/payments");
-const reviewRoutes = require("./routes/reviews");
+const reviewRoutes = require("./routes/review");
 const wishlistRoutes = require("./routes/wishlist");
 const dashboardRoutes = require("./routes/dashboard");
+const platformRoutes = require("./routes/platform");
+const platformData = require("./data/platformData");
 
 /* AUTH */
 const passport = require("passport");
@@ -131,7 +133,7 @@ function checkFraud(listing) {
 /* ---------------- ROUTES ---------------- */
 
 app.get("/", (req, res) => {
-  res.render("home");
+  res.render("home", platformData);
 });
 
 /* AUTH */
@@ -140,14 +142,19 @@ app.get("/signup", (req, res) => res.render("users/signup"));
 
 app.post("/signup", async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
+    const allowedRoles = ["tourist", "host", "vendor", "organizer"];
 
     if (!password || password.length < 8) {
       req.flash("error", "Password must be at least 8 characters long.");
       return res.redirect("/signup");
     }
 
-    const newUser = new User({ email, username });
+    const newUser = new User({
+      email,
+      username,
+      role: allowedRoles.includes(role) ? role : "tourist"
+    });
 
     const registeredUser = await User.register(newUser, password);
 
@@ -470,8 +477,9 @@ app.post("/wishlist/:id", isLoggedIn, wrapAsync(async (req, res) => {
   res.redirect(req.get("Referrer") || "/listings");
 }));
 
+app.use("/", platformRoutes);
 app.use("/payments", paymentRoutes);
-app.use("/listings/:id/reviews", reviewRoutes);
+app.use("/", reviewRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/dashboard", dashboardRoutes);
 /* ERROR */

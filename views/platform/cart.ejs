@@ -1,0 +1,37 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Unified cart</p>
+      <h1>One checkout for the whole trip.</h1>
+      <p>Stays, activities, events, and marketplace products are paid together with transparent impact tracking.</p>
+    </div>
+    <a href="/planner" class="btn btn-dark"><i class="fa-solid fa-plus"></i> Add more</a>
+  </div>
+
+  <div class="checkout-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Cart items</h2>
+        <% cartItems.forEach((item) => { %>
+          <div class="history-row">
+            <span><%= item.type %> - <%= item.label %></span>
+            <strong>Rs. <%= item.price.toLocaleString("en-IN") %></strong>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+
+    <aside class="surface-panel">
+      <div class="panel-body">
+        <h2>Checkout summary</h2>
+        <div class="summary-line"><span>Subtotal</span><strong>Rs. <%= subtotal.toLocaleString("en-IN") %></strong></div>
+        <div class="summary-line"><span>Platform fee</span><strong>Rs. <%= serviceFee.toLocaleString("en-IN") %></strong></div>
+        <div class="summary-line"><span>Local contribution</span><strong>Rs. <%= localContribution.toLocaleString("en-IN") %></strong></div>
+        <div class="summary-line total-line"><span>Total</span><strong>Rs. <%= (subtotal + serviceFee).toLocaleString("en-IN") %></strong></div>
+        <button class="btn btn-dark w-100 mt-3" type="button"><i class="fa-solid fa-lock"></i> Continue securely</button>
+      </div>
+    </aside>
+  </div>
+</section>

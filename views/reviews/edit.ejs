@@ -1,0 +1,19 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell narrow-shell">
+  <div class="surface-panel">
+    <div class="panel-body">
+      <p class="eyebrow">Edit review</p>
+      <h1><%= review.listing?.title || "Travelia stay" %></h1>
+      <form action="/reviews/<%= review._id %>?_method=PUT" method="POST" class="review-form mt-4">
+        <select name="review[rating]" class="form-select" required>
+          <% [5, 4, 3, 2, 1].forEach((rating) => { %>
+            <option value="<%= rating %>" <%= review.rating === rating ? "selected" : "" %>><%= rating %> stars</option>
+          <% }) %>
+        </select>
+        <textarea name="review[comment]" class="form-control" rows="4" required><%= review.comment %></textarea>
+        <button class="btn btn-dark" type="submit">Save review</button>
+      </form>
+    </div>
+  </div>
+</section>

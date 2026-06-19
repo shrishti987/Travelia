@@ -1,9 +1,11 @@
 <% layout("layouts/boilerplate") %>
+<% const ecoScore = 78 + (Number(listing.price || 0) % 17); %>
+<% const localImpact = Math.max(1200, Math.round(Number(listing.price || 0) * 0.22)); %>
 
 <section class="page-shell show-page">
   <div class="page-heading split-heading">
     <div>
-      <p class="eyebrow"><%= listing.category %></p>
+      <p class="eyebrow"><%= listing.category %> - <%= listing.propertyType || "Stay" %></p>
       <h1><%= listing.title %></h1>
       <p><%= listing.location %>, <%= listing.country %></p>
     </div>
@@ -14,9 +16,9 @@
   </div>
 
   <div class="image-grid">
-    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200' %>" alt="<%= listing.title %>">
-    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900' %>" alt="">
-    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900' %>" alt="">
+    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop' %>" alt="<%= listing.title %>">
+    <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=900&auto=format&fit=crop" alt="">
+    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&auto=format&fit=crop" alt="">
   </div>
 
   <div class="show-grid">
@@ -25,7 +27,7 @@
         <% if (listing.isFraud) { %>
           <div class="alert alert-danger">This listing needs review: <%= listing.fraudReason %></div>
         <% } else { %>
-          <div class="info-banner">Verified listing</div>
+          <div class="info-banner">Verified stay with host, payment, and review checks.</div>
         <% } %>
 
         <h2>About this stay</h2>
@@ -35,6 +37,9 @@
           <span><strong>Category</strong><%= listing.category %></span>
           <span><strong>Nightly rate</strong>Rs. <%= Number(listing.price).toLocaleString("en-IN") %></span>
           <span><strong>Rating</strong><%= listing.avgRating ? listing.avgRating.toFixed(1) : "No ratings yet" %></span>
+          <span><strong>Eco score</strong><%= ecoScore %>/100</span>
+          <span><strong>Local impact</strong>Rs. <%= localImpact.toLocaleString("en-IN") %>/night</span>
+          <span><strong>Weather fit</strong>Morning activities preferred</span>
         </div>
       </div>
     </article>
@@ -52,10 +57,38 @@
             Check out
             <input type="date" name="checkOut" class="form-control" required>
           </label>
-          <button class="btn btn-dark w-100" type="submit">Continue to payment</button>
+          <button class="btn btn-dark w-100" type="submit"><i class="fa-solid fa-credit-card"></i> Continue to payment</button>
         </form>
+        <a href="/cart" class="btn btn-outline-dark w-100 mt-2"><i class="fa-solid fa-cart-plus"></i> Add to trip cart</a>
       </div>
     </aside>
+  </div>
+
+  <div class="show-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
+        <div class="split-heading">
+          <div>
+            <p class="eyebrow">Trip intelligence</p>
+            <h2>Recommended add-ons</h2>
+          </div>
+          <a href="/planner" class="text-link">Open planner</a>
+        </div>
+        <div class="addon-grid">
+          <a href="/experiences"><i class="fa-solid fa-person-hiking"></i><strong>Ridge trek</strong><span>6 hours - weather-safe window</span></a>
+          <a href="/events"><i class="fa-solid fa-ticket"></i><strong>Local evening event</strong><span>QR ticket - pickup nearby</span></a>
+          <a href="/marketplace"><i class="fa-solid fa-store"></i><strong>Craft pickup</strong><span>Supports local vendors</span></a>
+          <a href="/sos"><i class="fa-solid fa-kit-medical"></i><strong>Safety center</strong><span>Emergency contacts ready</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Location</h2>
+        <div id="map" class="map-box"></div>
+      </div>
+    </section>
   </div>
 
   <div class="show-grid">
@@ -97,8 +130,12 @@
 
     <section class="surface-panel">
       <div class="panel-body">
-        <h2>Location</h2>
-        <div id="map" class="map-box"></div>
+        <h2>Community impact</h2>
+        <div class="score-bars">
+          <span><strong>Host payout</strong><i style="--value: 82%"></i></span>
+          <span><strong>Local sourcing</strong><i style="--value: 74%"></i></span>
+          <span><strong>Low-waste practices</strong><i style="--value: 68%"></i></span>
+        </div>
       </div>
     </section>
   </div>
@@ -106,8 +143,10 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const map = L.map("map").setView([30.3165, 78.0322], 13);
+    const lat = <%= listing.latitude || 30.3165 %>;
+    const lng = <%= listing.longitude || 78.0322 %>;
+    const map = L.map("map").setView([lat, lng], 13);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
-    L.marker([30.3165, 78.0322]).addTo(map).bindPopup("<b><%= listing.title.replace(/"/g, '\\"') %></b>").openPopup();
+    L.marker([lat, lng]).addTo(map).bindPopup("<b><%= listing.title.replace(/"/g, '\\"') %></b>").openPopup();
   });
 </script>

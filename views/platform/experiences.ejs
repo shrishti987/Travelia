@@ -1,0 +1,33 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Activities and adventures</p>
+      <h1>Reserve memorable experiences with trusted local operators.</h1>
+      <p>Every activity is ranked by fit, weather, safety, reviews, and community benefit.</p>
+    </div>
+    <a href="/planner" class="btn btn-dark"><i class="fa-solid fa-wand-magic-sparkles"></i> Plan around these</a>
+  </div>
+
+  <div class="listing-grid">
+    <% experiences.forEach((experience) => { %>
+      <article class="venture-card">
+        <a href="/cart" class="image-link">
+          <img src="<%= experience.image %>" alt="<%= experience.title %>">
+        </a>
+        <div class="card-badges">
+          <span><i class="fa-solid fa-bolt"></i> <%= experience.score %>% fit</span>
+          <span><%= experience.type %></span>
+        </div>
+        <div class="stay-card-body">
+          <div>
+            <p class="card-kicker"><%= experience.location %> - <%= experience.duration %></p>
+            <h2><%= experience.title %></h2>
+          </div>
+          <p class="price-line">Rs. <%= experience.price.toLocaleString("en-IN") %></p>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>

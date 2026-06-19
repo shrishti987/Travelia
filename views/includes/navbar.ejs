@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg sticky-top custom-navbar">
   <div class="container nav-container">
     <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-      <i class="fa-regular fa-compass brand-icon"></i>
+      <span class="brand-mark"><i class="fa-regular fa-compass"></i></span>
       <span class="brand-text">Travelia</span>
     </a>
 
@@ -11,18 +11,35 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <form class="search-bar-navbar mx-auto" action="/search" method="GET">
-        <input type="search" name="q" placeholder="Search destination, stay, or country" value="<%= typeof filters !== 'undefined' && filters.q ? filters.q : '' %>">
+        <input type="search" name="q" placeholder="Search stays, places, or ideas" value="<%= typeof filters !== 'undefined' && filters.q ? filters.q : '' %>">
         <button type="submit" aria-label="Search">
           <i class="fa-solid fa-magnifying-glass"></i>
         </button>
       </form>
 
-      <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
-        <li class="nav-item">
-          <a class="nav-link" href="/listings">Explore</a>
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+        <li class="nav-item"><a class="nav-link" href="/planner">AI Planner</a></li>
+        <li class="nav-item"><a class="nav-link" href="/listings">Stays</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Explore</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/experiences">Activities</a></li>
+            <li><a class="dropdown-item" href="/events">Events</a></li>
+            <li><a class="dropdown-item" href="/marketplace">Marketplace</a></li>
+            <li><a class="dropdown-item" href="/impact">Impact dashboard</a></li>
+            <li><a class="dropdown-item" href="/roles">Role dashboards</a></li>
+          </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/listings/new">Host</a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </li>
+        <li class="nav-item">
+          <a class="nav-icon-link" href="/sos" aria-label="SOS emergency assistance"><i class="fa-solid fa-kit-medical"></i></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-icon-link" href="/cart" aria-label="Open trip cart"><i class="fa-solid fa-cart-shopping"></i></a>
         </li>
 
         <% if (!currUser) { %>
@@ -46,6 +63,7 @@
               <li><a class="dropdown-item" href="/mylistings">My Listings</a></li>
               <li><a class="dropdown-item" href="/trips">Trips</a></li>
               <li><a class="dropdown-item" href="/recommendations">Recommended</a></li>
+              <li><a class="dropdown-item" href="/roles/<%= currUser.role === 'guest' ? 'tourist' : currUser.role %>">My role console</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item" href="/logout">Logout</a></li>
             </ul>
@@ -63,5 +81,8 @@
     <a href="/search?category=City" class="category-item"><i class="fa-solid fa-city"></i><small>City</small></a>
     <a href="/search?category=Camping" class="category-item"><i class="fa-solid fa-campground"></i><small>Camping</small></a>
     <a href="/search?category=Islands" class="category-item"><i class="fa-solid fa-water"></i><small>Islands</small></a>
+    <a href="/experiences" class="category-item"><i class="fa-solid fa-person-hiking"></i><small>Activities</small></a>
+    <a href="/events" class="category-item"><i class="fa-solid fa-ticket"></i><small>Events</small></a>
+    <a href="/marketplace" class="category-item"><i class="fa-solid fa-bag-shopping"></i><small>Local goods</small></a>
   </div>
 </div>

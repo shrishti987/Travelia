@@ -1,2 +1,4 @@
 node_modules/
 .env
+.travelia-server.err
+.travelia-server.log

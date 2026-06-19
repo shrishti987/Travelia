@@ -1,0 +1,49 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Sustainability and community impact</p>
+      <h1>Measure the value Travelia creates beyond the booking.</h1>
+      <p>Eco scores, local payouts, partner growth, and responsible travel signals stay visible to every role.</p>
+    </div>
+    <a href="/planner" class="btn btn-dark"><i class="fa-solid fa-leaf"></i> Plan a lower-impact trip</a>
+  </div>
+
+  <div class="dashboard-metrics impact-metrics">
+    <% impactMetrics.forEach((metric) => { %>
+      <article class="metric-card">
+        <span><%= metric.label %></span>
+        <strong><%= metric.value %></strong>
+        <p><%= metric.detail %></p>
+      </article>
+    <% }) %>
+  </div>
+
+  <div class="impact-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Eco scoring model</h2>
+        <div class="score-bars">
+          <span><strong>Renewable energy</strong><i style="--value: 82%"></i></span>
+          <span><strong>Waste reduction</strong><i style="--value: 74%"></i></span>
+          <span><strong>Local sourcing</strong><i style="--value: 91%"></i></span>
+          <span><strong>Transit efficiency</strong><i style="--value: 67%"></i></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Community distribution</h2>
+        <div class="donut-chart" aria-label="Community distribution chart"></div>
+        <div class="legend-list">
+          <span><i class="legend-stay"></i> Hosts</span>
+          <span><i class="legend-guide"></i> Guides</span>
+          <span><i class="legend-vendor"></i> Vendors</span>
+          <span><i class="legend-event"></i> Organizers</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

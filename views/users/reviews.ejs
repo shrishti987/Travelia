@@ -1,0 +1,41 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Reviews</p>
+      <h1>Your travel reviews</h1>
+      <p>Ratings and notes you have shared across Travelia stays.</p>
+    </div>
+    <a href="/listings" class="btn btn-dark">Explore stays</a>
+  </div>
+
+  <% if (reviews.length === 0) { %>
+    <div class="empty-panel">
+      <h2>No reviews yet</h2>
+      <p>Your reviews will appear here after you rate a stay.</p>
+    </div>
+  <% } else { %>
+    <div class="trip-list">
+      <% reviews.forEach((review) => { %>
+        <article class="surface-panel">
+          <div class="panel-body">
+            <div class="split-heading">
+              <div>
+                <p class="eyebrow"><%= review.rating %> stars</p>
+                <h2><%= review.listing?.title || "Travelia stay" %></h2>
+              </div>
+              <div class="action-row">
+                <a href="/reviews/<%= review._id %>/edit" class="btn btn-outline-dark btn-sm">Edit</a>
+                <form action="/reviews/<%= review._id %>?_method=DELETE" method="POST">
+                  <button class="btn btn-outline-dark btn-sm" type="submit">Delete</button>
+                </form>
+              </div>
+            </div>
+            <p class="muted"><%= review.comment %></p>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>

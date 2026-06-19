@@ -1,0 +1,29 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Local marketplace</p>
+      <h1>Shop regional products from verified makers.</h1>
+      <p>Bundle souvenirs, food, craft, and pickups into the same trip checkout.</p>
+    </div>
+    <a href="/roles/vendor" class="btn btn-dark"><i class="fa-solid fa-store"></i> Vendor console</a>
+  </div>
+
+  <div class="listing-grid">
+    <% products.forEach((product) => { %>
+      <article class="venture-card">
+        <a href="/cart" class="image-link">
+          <img src="<%= product.image %>" alt="<%= product.title %>">
+        </a>
+        <div class="stay-card-body">
+          <div>
+            <p class="card-kicker"><%= product.maker %> - <%= product.location %></p>
+            <h2><%= product.title %></h2>
+          </div>
+          <p class="price-line">Rs. <%= product.price.toLocaleString("en-IN") %></p>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>

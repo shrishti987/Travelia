@@ -1,31 +1,48 @@
 <% layout("/layouts/boilerplate") %>
+<% const points = currUser?.loyaltyPoints || 1200; %>
+<% const roleId = currUser?.role === "guest" ? "tourist" : (currUser?.role || "tourist"); %>
 
 <section class="page-shell">
-  <div class="page-heading">
-    <p class="eyebrow">Dashboard</p>
-    <h1>Your travel activity</h1>
-    <p>Bookings, payments, and saved stays in one place.</p>
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Traveler operating system</p>
+      <h1>Your Travelia dashboard</h1>
+      <p>Bookings, payments, wishlist, rewards, impact, and role tools in one clean workspace.</p>
+    </div>
+    <div class="action-row">
+      <a href="/roles/<%= roleId %>" class="btn btn-outline-dark"><i class="fa-solid fa-table-columns"></i> Role console</a>
+      <a href="/planner" class="btn btn-dark"><i class="fa-solid fa-wand-magic-sparkles"></i> Plan trip</a>
+    </div>
   </div>
 
   <div class="dashboard-metrics">
     <div class="metric-card">
       <span>Bookings</span>
       <strong><%= bookings.length %></strong>
+      <p>Confirmed and pending stays</p>
     </div>
     <div class="metric-card">
       <span>Wishlist</span>
       <strong><%= wishlist.length %></strong>
+      <p>Saved stays and ideas</p>
     </div>
     <div class="metric-card">
-      <span>Transactions</span>
-      <strong><%= transactions.length %></strong>
+      <span>Loyalty points</span>
+      <strong><%= points.toLocaleString("en-IN") %></strong>
+      <p>Unlock upgrades and badges</p>
     </div>
   </div>
 
   <div class="dashboard-grid">
     <section class="surface-panel">
       <div class="panel-body">
-        <h2>Recent bookings</h2>
+        <div class="split-heading">
+          <div>
+            <p class="eyebrow">Travel timeline</p>
+            <h2>Recent bookings</h2>
+          </div>
+          <a href="/trips" class="text-link">View all</a>
+        </div>
         <% if (bookings.length === 0) { %>
           <p class="muted">No bookings yet.</p>
         <% } %>
@@ -40,6 +57,28 @@
 
     <section class="surface-panel">
       <div class="panel-body">
+        <div class="split-heading">
+          <div>
+            <p class="eyebrow">Rewards</p>
+            <h2>Badges</h2>
+          </div>
+          <span class="status-pill status-paid">Level 3</span>
+        </div>
+        <div class="badge-grid">
+          <% (currUser?.badges && currUser.badges.length ? currUser.badges : ["Early Explorer", "Impact Traveler", "Review Builder"]).forEach((badge) => { %>
+            <span><i class="fa-solid fa-award"></i> <%= badge %></span>
+          <% }) %>
+        </div>
+        <div class="score-bars mt-3">
+          <span><strong>Next upgrade</strong><i style="--value: 66%"></i></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="dashboard-grid">
+    <section class="surface-panel">
+      <div class="panel-body">
         <h2>Recent payments</h2>
         <% if (transactions.length === 0) { %>
           <p class="muted">No payment records yet.</p>
@@ -50,6 +89,16 @@
             <strong>Rs. <%= Number(transaction.amount).toLocaleString("en-IN") %></strong>
           </div>
         <% }) %>
+      </div>
+    </section>
+
+    <section class="surface-panel">
+      <div class="panel-body">
+        <h2>Community impact</h2>
+        <div class="history-row"><span>Local payout enabled</span><strong>Rs. 8,240</strong></div>
+        <div class="history-row"><span>Eco choices</span><strong>74%</strong></div>
+        <div class="history-row"><span>Reviews contributed</span><strong>12</strong></div>
+        <a href="/impact" class="btn btn-outline-dark w-100 mt-3">Open impact dashboard</a>
       </div>
     </section>
   </div>

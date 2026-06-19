@@ -1,0 +1,83 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell planner-page">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">AI Trip Planner</p>
+      <h1>Build a weather-aware itinerary in seconds.</h1>
+      <p>Personalized stays, activities, events, products, and safety support flow into one trip plan.</p>
+    </div>
+    <a href="/cart" class="btn btn-dark"><i class="fa-solid fa-cart-shopping"></i> View cart</a>
+  </div>
+
+  <div class="planner-grid">
+    <form action="/planner" method="POST" class="surface-panel panel-body planner-form">
+      <label>
+        Destination
+        <input name="destination" value="<%= plannerResult.destination %>" placeholder="Goa, Himachal, Bali, Tokyo">
+      </label>
+      <label>
+        Trip style
+        <select name="vibe">
+          <% ["culture", "nature", "adventure", "luxury"].forEach((vibe) => { %>
+            <option value="<%= vibe %>" <%= plannerResult.vibe === vibe ? "selected" : "" %>><%= vibe[0].toUpperCase() + vibe.slice(1) %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        Days
+        <input type="number" name="days" min="2" max="10" value="<%= plannerResult.days %>">
+      </label>
+      <label>
+        Travelers
+        <input name="travelers" value="<%= plannerResult.travelers %>">
+      </label>
+      <label>
+        Budget band
+        <select name="budget">
+          <% ["Smart", "Premium", "Luxury"].forEach((budget) => { %>
+            <option value="<%= budget %>" <%= plannerResult.budget === budget ? "selected" : "" %>><%= budget %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="btn btn-dark" type="submit"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate plan</button>
+    </form>
+
+    <section class="surface-panel">
+      <div class="panel-body">
+        <div class="result-header">
+          <div>
+            <p class="eyebrow">Generated route</p>
+            <h2><%= plannerResult.destination %></h2>
+          </div>
+          <span class="score-ring"><%= plannerResult.confidence %></span>
+        </div>
+        <p class="muted"><%= plannerResult.route %></p>
+        <div class="itinerary-list">
+          <% plannerResult.daysPlan.forEach((item) => { %>
+            <article class="timeline-item">
+              <span>Day <%= item.day %></span>
+              <div>
+                <h3><%= item.title %></h3>
+                <p><%= item.weather %> - <%= item.impact %></p>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="recommendation-band">
+    <% destinations.forEach((destination) => { %>
+      <a class="destination-tile" href="<%= destination.href %>">
+        <img src="<%= destination.image %>" alt="<%= destination.name %>">
+        <div>
+          <span><%= destination.match %>% match</span>
+          <h2><%= destination.name %></h2>
+          <p><%= destination.location %> - <%= destination.weather %></p>
+        </div>
+      </a>
+    <% }) %>
+  </section>
+</section>

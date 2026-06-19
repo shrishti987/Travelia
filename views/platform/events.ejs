@@ -1,0 +1,33 @@
+<% layout("layouts/boilerplate") %>
+
+<section class="page-shell">
+  <div class="page-heading split-heading">
+    <div>
+      <p class="eyebrow">Events and ticketing</p>
+      <h1>Discover destination events and issue QR-ready tickets.</h1>
+      <p>Travelia brings events into the same itinerary, cart, payment, and traveler identity layer.</p>
+    </div>
+    <a href="/roles/organizer" class="btn btn-dark"><i class="fa-solid fa-qrcode"></i> Organizer view</a>
+  </div>
+
+  <div class="event-grid">
+    <% events.forEach((event) => { %>
+      <article class="event-row surface-panel">
+        <img src="<%= event.image %>" alt="<%= event.title %>">
+        <div class="panel-body">
+          <p class="eyebrow"><%= event.date %> - <%= event.location %></p>
+          <h2><%= event.title %></h2>
+          <p class="muted"><%= event.demand %> demand - Smart bundles available with stays and activities.</p>
+          <div class="action-row">
+            <strong>Rs. <%= event.price.toLocaleString("en-IN") %></strong>
+            <a href="/cart" class="btn btn-outline-dark">Add ticket</a>
+          </div>
+        </div>
+        <div class="ticket-stub">
+          <div class="qr-code" aria-label="Sample QR ticket"></div>
+          <span>TRAVELIA PASS</span>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>

@@ -3,11 +3,14 @@
 <section class="page-shell">
   <div class="page-heading split-heading">
     <div>
-      <p class="eyebrow"><%= typeof isRecommendation !== 'undefined' ? 'Recommended for you' : 'Explore stays' %></p>
-      <h1>Find a stay that fits the trip</h1>
-      <p><%= listings.length %> place<%= listings.length !== 1 ? "s" : "" %> available</p>
+      <p class="eyebrow"><%= typeof isRecommendation !== 'undefined' ? 'Recommended for you' : 'Stay discovery' %></p>
+      <h1>Book verified stays with intelligence around every choice.</h1>
+      <p><%= listings.length %> stay<%= listings.length !== 1 ? "s" : "" %> available with booking, reviews, impact signals, and trip add-ons.</p>
     </div>
-    <a href="/listings/new" class="btn btn-dark">List your stay</a>
+    <div class="action-row">
+      <a href="/planner" class="btn btn-outline-dark"><i class="fa-solid fa-wand-magic-sparkles"></i> AI plan</a>
+      <a href="/listings/new" class="btn btn-dark"><i class="fa-solid fa-house-circle-check"></i> List your stay</a>
+    </div>
   </div>
 
   <form action="/search" method="GET" class="filter-panel">
@@ -21,51 +24,69 @@
         <option value="<%= category %>" <%= typeof filters !== 'undefined' && filters.category === category ? "selected" : "" %>><%= category %></option>
       <% }) %>
     </select>
-    <button class="btn btn-dark" type="submit">Filter</button>
+    <button class="btn btn-dark" type="submit"><i class="fa-solid fa-sliders"></i> Filter</button>
   </form>
 
   <% if (typeof isRecommendation !== 'undefined') { %>
-    <div class="info-banner">Curated from your viewed listings and category preferences.</div>
+    <div class="info-banner">Curated from your viewed listings, category preferences, and recent demand signals.</div>
   <% } %>
 
-  <% if (!listings || listings.length === 0) { %>
-    <div class="empty-panel">
-      <h2>No listings found</h2>
-      <p>Try a broader destination, lower price range, or a different category.</p>
+  <div class="search-layout">
+    <div>
+      <% if (!listings || listings.length === 0) { %>
+        <div class="empty-panel">
+          <h2>No listings found</h2>
+          <p>Try a broader destination, lower price range, or a different category.</p>
+        </div>
+      <% } else { %>
+        <div class="listing-grid compact-grid">
+          <% listings.forEach((listing, index) => { %>
+            <% const isSaved = wishlistIds.includes(listing._id.toString()); %>
+            <% const ecoScore = 72 + ((Number(listing.price) + index * 7) % 23); %>
+            <% const impactValue = Math.max(900, Math.round(Number(listing.price || 0) * 0.18)); %>
+            <article class="stay-card">
+              <a href="/listings/<%= listing._id %>" class="image-link">
+                <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700&auto=format&fit=crop' %>" alt="<%= listing.title %>" loading="lazy">
+              </a>
+
+              <div class="card-badges">
+                <span><i class="fa-solid fa-star"></i> <%= listing.avgRating ? listing.avgRating.toFixed(1) : "New" %></span>
+                <span><i class="fa-solid fa-leaf"></i> <%= ecoScore %></span>
+                <% if (!listing.isFraud) { %>
+                  <span>Verified</span>
+                <% } else { %>
+                  <span class="risk">Review needed</span>
+                <% } %>
+              </div>
+
+              <form action="/wishlist/<%= listing._id %>/toggle" method="POST" class="floating-form">
+                <button class="icon-button <%= isSaved ? 'saved' : '' %>" type="submit" aria-label="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>">
+                  <i class="<%= isSaved ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
+                </button>
+              </form>
+
+              <div class="stay-card-body">
+                <div>
+                  <p class="card-kicker"><%= listing.location %>, <%= listing.country %></p>
+                  <h2><a href="/listings/<%= listing._id %>"><%= listing.title %></a></h2>
+                  <small class="impact-note">Rs. <%= impactValue.toLocaleString("en-IN") %> estimated local impact per night</small>
+                </div>
+                <p class="price-line">Rs. <%= Number(listing.price).toLocaleString("en-IN") %> <span>/ night</span></p>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
     </div>
-  <% } else { %>
-    <div class="listing-grid">
-      <% listings.forEach((listing) => { %>
-        <% const isSaved = wishlistIds.includes(listing._id.toString()); %>
-        <article class="stay-card">
-          <a href="/listings/<%= listing._id %>" class="image-link">
-            <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700' %>" alt="<%= listing.title %>" loading="lazy">
-          </a>
 
-          <div class="card-badges">
-            <span><i class="fa-solid fa-star"></i> <%= listing.avgRating ? listing.avgRating.toFixed(1) : "New" %></span>
-            <% if (!listing.isFraud) { %>
-              <span>Verified</span>
-            <% } else { %>
-              <span class="risk">Review needed</span>
-            <% } %>
-          </div>
-
-          <form action="/wishlist/<%= listing._id %>/toggle" method="POST" class="floating-form">
-            <button class="icon-button <%= isSaved ? 'saved' : '' %>" type="submit" aria-label="<%= isSaved ? 'Remove from wishlist' : 'Save to wishlist' %>">
-              <i class="<%= isSaved ? 'fa-solid' : 'fa-regular' %> fa-heart"></i>
-            </button>
-          </form>
-
-          <div class="stay-card-body">
-            <div>
-              <p class="card-kicker"><%= listing.location %>, <%= listing.country %></p>
-              <h2><a href="/listings/<%= listing._id %>"><%= listing.title %></a></h2>
-            </div>
-            <p class="price-line">Rs. <%= Number(listing.price).toLocaleString("en-IN") %> <span>/ night</span></p>
-          </div>
-        </article>
-      <% }) %>
-    </div>
-  <% } %>
+    <aside class="surface-panel search-map-panel">
+      <div class="travelia-mini-map" data-lat="30.3165" data-lng="78.0322"></div>
+      <div class="panel-body">
+        <p class="eyebrow">Interactive map</p>
+        <h2>Destination graph</h2>
+        <p class="muted">Pair stays with nearby activities, event inventory, emergency support, and local pickup points.</p>
+        <a href="/planner" class="btn btn-outline-dark w-100">Optimize route</a>
+      </div>
+    </aside>
+  </div>
 </section>
