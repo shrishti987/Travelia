@@ -62,7 +62,7 @@
         <div class="destination-stack">
           <% destinations.forEach((destination) => { %>
             <a class="destination-row" href="<%= destination.href %>">
-              <img src="<%= destination.image %>" alt="<%= destination.name %>">
+              <img src="<%= destination.image %>" alt="<%= destination.name %>" loading="lazy" decoding="async">
               <div>
                 <strong><%= destination.name %></strong>
                 <span><%= destination.location %> - <%= destination.weather %></span>
@@ -93,7 +93,7 @@
     <% experiences.forEach((experience) => { %>
       <article class="venture-card">
         <a href="/experiences" class="image-link">
-          <img src="<%= experience.image %>" alt="<%= experience.title %>">
+          <img src="<%= experience.image %>" alt="<%= experience.title %>" loading="lazy" decoding="async">
         </a>
         <div class="card-badges">
           <span><i class="fa-solid fa-bolt"></i> <%= experience.score %>% fit</span>

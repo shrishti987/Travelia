@@ -27,6 +27,36 @@ const dashboardRoutes = require("./routes/dashboard");
 const platformRoutes = require("./routes/platform");
 const platformData = require("./data/platformData");
 
+const LISTING_CARD_FIELDS = "title image price location country category avgRating isFraud createdAt";
+const LISTING_CATEGORIES = ["Beach", "Mountains", "City", "Camping", "Islands"];
+const SORT_OPTIONS = {
+  newest: { createdAt: -1 },
+  price_asc: { price: 1, createdAt: -1 },
+  price_desc: { price: -1, createdAt: -1 },
+  rating: { avgRating: -1, createdAt: -1 }
+};
+
+function escapeRegex(value = "") {
+  return String(value).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function cleanFilter(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function parsePrice(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function getListingSort(sortKey) {
+  return SORT_OPTIONS[sortKey] || SORT_OPTIONS.newest;
+}
+
+function getActiveSort(sortKey) {
+  return SORT_OPTIONS[sortKey] ? sortKey : "newest";
+}
+
 /* AUTH */
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
@@ -47,13 +77,17 @@ async function main() {
 /* ---------------- MIDDLEWARE ---------------- */
 
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({ extended: true }));
+app.disable("x-powered-by");
+app.use(express.urlencoded({ extended: true, limit: "500kb" }));
 app.use(methodOverride("_method"));
 
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 
-app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.static(path.join(__dirname, "public"), {
+  etag: true,
+  maxAge: process.env.NODE_ENV === "production" ? "7d" : 0
+}));
 
 /* SESSION */
 app.use(session({
@@ -62,6 +96,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     maxAge: 1000 * 60 * 60 * 24 * 7
   }
 }));
@@ -193,56 +229,76 @@ app.get("/profile", isLoggedIn, (req, res) => {
 
 app.get("/mylistings", isLoggedIn, wrapAsync(async (req, res) => {
 
-  const listings = await Listing.find({
-    owner: req.user._id
-  });
+  const listings = await Listing.find({ owner: req.user._id })
+    .select(LISTING_CARD_FIELDS)
+    .sort({ createdAt: -1 })
+    .lean();
 
-  res.render("listings/index", { listings });
+  res.render("listings/index", { listings, filters: {}, activeSort: "newest" });
 
 }));
 
 /* SEARCH */
 
 app.get("/search", wrapAsync(async (req, res) => {
-  const { q, location, country, minPrice, maxPrice, category } = req.query;
+  const category = cleanFilter(req.query.category);
+  const minPrice = parsePrice(req.query.minPrice);
+  const maxPrice = parsePrice(req.query.maxPrice);
+  const filters = {
+    q: cleanFilter(req.query.q),
+    location: cleanFilter(req.query.location),
+    country: cleanFilter(req.query.country),
+    minPrice: minPrice !== undefined ? String(minPrice) : "",
+    maxPrice: maxPrice !== undefined ? String(maxPrice) : "",
+    category: LISTING_CATEGORIES.includes(category) ? category : "",
+    sort: getActiveSort(req.query.sort)
+  };
   const query = {};
 
-  if (q) {
+  if (filters.q) {
+    const searchRegex = new RegExp(escapeRegex(filters.q), "i");
     query.$or = [
-      { title: { $regex: q, $options: "i" } },
-      { description: { $regex: q, $options: "i" } },
-      { location: { $regex: q, $options: "i" } },
-      { country: { $regex: q, $options: "i" } }
+      { title: searchRegex },
+      { description: searchRegex },
+      { location: searchRegex },
+      { country: searchRegex }
     ];
   }
-  if (location) query.location = { $regex: location, $options: "i" };
-  if (country) query.country = { $regex: country, $options: "i" };
-  if (category) query.category = category;
+  if (filters.location) query.location = new RegExp(escapeRegex(filters.location), "i");
+  if (filters.country) query.country = new RegExp(escapeRegex(filters.country), "i");
+  if (filters.category) query.category = filters.category;
 
-  if (minPrice || maxPrice) {
+  if (minPrice !== undefined || maxPrice !== undefined) {
     query.price = {};
-    if (minPrice) query.price.$gte = Number(minPrice);
-    if (maxPrice) query.price.$lte = Number(maxPrice);
+    if (minPrice !== undefined) query.price.$gte = minPrice;
+    if (maxPrice !== undefined) query.price.$lte = maxPrice;
   }
 
-  const listings = await Listing.find(query).sort({ createdAt: -1 });
-  res.render("listings/index", { listings, filters: req.query });
+  const listings = await Listing.find(query)
+    .select(LISTING_CARD_FIELDS)
+    .sort(getListingSort(filters.sort))
+    .lean();
+
+  res.render("listings/index", { listings, filters, activeSort: filters.sort });
 }));
 
 /* INDEX */
 
 app.get("/listings", wrapAsync(async (req, res) => {
-  const listings = await Listing.find({}).sort({ createdAt: -1 });
-  res.render("listings/index", { listings, filters: {} });
+  const activeSort = getActiveSort(req.query.sort);
+  const listings = await Listing.find({})
+    .select(LISTING_CARD_FIELDS)
+    .sort(getListingSort(activeSort))
+    .lean();
+
+  res.render("listings/index", { listings, filters: { sort: activeSort }, activeSort });
 }));
 
 /* CATEGORY (FIXED) */
 
 /* ⭐ Category Filter Route (DEBUG VERSION) */
 
-app.get("/category/:category", async (req, res) => {
-  console.log("CATEGORY CLICKED:", req.params.category);
-
+app.get("/category/:category", wrapAsync(async (req, res) => {
   let { category } = req.params;
 
   const categoryMap = {
@@ -256,21 +312,26 @@ app.get("/category/:category", async (req, res) => {
     islands: "Islands"
   };
 
-  category = categoryMap[category.toLowerCase()];
+  category = categoryMap[category.toLowerCase()] || category;
 
-  console.log("AFTER MAP:", category);
+  const listings = LISTING_CATEGORIES.includes(category)
+    ? await Listing.find({ category })
+      .select(LISTING_CARD_FIELDS)
+      .sort({ createdAt: -1 })
+      .lean()
+    : [];
 
-  const listings = await Listing.find({ category });
-
-  console.log("FOUND:", listings.length);
-
-  res.render("listings/index", { listings });
-});
+  res.render("listings/index", {
+    listings,
+    filters: { category, sort: "newest" },
+    activeSort: "newest"
+  });
+}));
   
     
 /* RECOMMENDATIONS */
 
-app.get("/recommendations", isLoggedIn, async (req, res) => {
+app.get("/recommendations", isLoggedIn, wrapAsync(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   let listings = [];
@@ -279,18 +340,28 @@ app.get("/recommendations", isLoggedIn, async (req, res) => {
     listings = await Listing.find({
       category: { $in: user.preferredCategories },
       _id: { $nin: user.viewedListings || [] }
-    }).limit(10);
+    })
+      .select(LISTING_CARD_FIELDS)
+      .sort({ avgRating: -1, createdAt: -1 })
+      .limit(10)
+      .lean();
   }
 
   if (listings.length === 0) {
-    listings = await Listing.find().limit(10);
+    listings = await Listing.find()
+      .select(LISTING_CARD_FIELDS)
+      .sort({ avgRating: -1, createdAt: -1 })
+      .limit(10)
+      .lean();
   }
 
   res.render("listings/index", {
     listings,
+    filters: {},
+    activeSort: "rating",
     isRecommendation: true
   });
-});
+}));
 
 /* NEW */
 
@@ -351,7 +422,10 @@ if (existingBooking) {
   throw new ExpressError(400, "You already booked this listing");
 }
 
-    const listing = await Listing.findById(id);
+    const listing = await Listing.findById(id).select("price");
+    if (!listing) {
+      throw new ExpressError(404, "Listing not found");
+    }
 
     const totalPrice = diffDays * listing.price;
 
@@ -372,13 +446,14 @@ if (existingBooking) {
 );
 
 // MY TRIPS
-app.get("/trips", isLoggedIn, async (req, res) => {
+app.get("/trips", isLoggedIn, wrapAsync(async (req, res) => {
   const bookings = await Booking.find({ user: req.user._id })
-    .populate("listing")
-    .sort({ createdAt: -1 });
+    .populate("listing", "title image location country price")
+    .sort({ createdAt: -1 })
+    .lean();
 
   res.render("bookings/trips", { bookings });
-});
+}));
 
 /* CREATE */
 
@@ -463,16 +538,21 @@ app.delete("/listings/:id",
 /* ❤️ WISHLIST */
 
 app.post("/wishlist/:id", isLoggedIn, wrapAsync(async (req, res) => {
-  const user = await User.findById(req.user._id);
   const listingId = req.params.id;
+  const exists = await User.exists({
+    _id: req.user._id,
+    wishlist: listingId
+  });
 
-  if (user.wishlist.some((item) => item.equals(listingId))) {
-    user.wishlist.pull(listingId);
+  if (exists) {
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { wishlist: listingId }
+    });
   } else {
-    user.wishlist.addToSet(listingId);
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { wishlist: listingId }
+    });
   }
-
-  await user.save();
 
   res.redirect(req.get("Referrer") || "/listings");
 }));
@@ -496,6 +576,7 @@ app.use((err, req, res, next) => {
 
 /* SERVER */
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -16,9 +16,9 @@
   </div>
 
   <div class="image-grid">
-    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop' %>" alt="<%= listing.title %>">
-    <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=900&auto=format&fit=crop" alt="">
-    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&auto=format&fit=crop" alt="">
+    <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&auto=format&fit=crop' %>" alt="<%= listing.title %>" decoding="async" fetchpriority="high">
+    <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=900&auto=format&fit=crop" alt="" loading="lazy" decoding="async">
+    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&auto=format&fit=crop" alt="" loading="lazy" decoding="async">
   </div>
 
   <div class="show-grid">
@@ -48,7 +48,7 @@
       <div class="panel-body">
         <h2>Reserve this stay</h2>
         <p class="price-line large">Rs. <%= Number(listing.price).toLocaleString("en-IN") %> <span>/ night</span></p>
-        <form action="/listings/<%= listing._id %>/book" method="POST" class="booking-form">
+        <form action="/listings/<%= listing._id %>/book" method="POST" class="booking-form" data-nightly-rate="<%= Number(listing.price || 0) %>">
           <label>
             Check in
             <input type="date" name="checkIn" class="form-control" required>
@@ -59,7 +59,22 @@
           </label>
           <button class="btn btn-dark w-100" type="submit"><i class="fa-solid fa-credit-card"></i> Continue to payment</button>
         </form>
-        <a href="/cart" class="btn btn-outline-dark w-100 mt-2"><i class="fa-solid fa-cart-plus"></i> Add to trip cart</a>
+        <div class="booking-estimate" aria-live="polite">
+          <span>Estimated total</span>
+          <strong data-booking-total>Choose dates</strong>
+          <small data-booking-nights></small>
+        </div>
+        <div class="side-action-stack">
+          <a href="/cart" class="btn btn-outline-dark w-100"><i class="fa-solid fa-cart-plus"></i> Add to trip cart</a>
+          <button
+            class="btn btn-outline-dark w-100 js-share-listing"
+            type="button"
+            data-title="<%= listing.title %>"
+            data-path="/listings/<%= listing._id %>"
+          >
+            <i class="fa-solid fa-share-nodes"></i> Share stay
+          </button>
+        </div>
       </div>
     </aside>
   </div>
@@ -86,7 +101,13 @@
     <section class="surface-panel">
       <div class="panel-body">
         <h2>Location</h2>
-        <div id="map" class="map-box"></div>
+        <div
+          id="map"
+          class="map-box travelia-detail-map"
+          data-lat="<%= listing.latitude || 30.3165 %>"
+          data-lng="<%= listing.longitude || 78.0322 %>"
+          data-label="<%= listing.title %>"
+        ></div>
       </div>
     </section>
   </div>
@@ -140,13 +161,3 @@
     </section>
   </div>
 </section>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const lat = <%= listing.latitude || 30.3165 %>;
-    const lng = <%= listing.longitude || 78.0322 %>;
-    const map = L.map("map").setView([lat, lng], 13);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
-    L.marker([lat, lng]).addTo(map).bindPopup("<b><%= listing.title.replace(/"/g, '\\"') %></b>").openPopup();
-  });
-</script>

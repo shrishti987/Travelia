@@ -1,4 +1,24 @@
 <% layout("layouts/boilerplate") %>
+<%
+  const activeFilters = typeof filters !== "undefined" ? filters : {};
+  const sortValue = typeof activeSort !== "undefined" ? activeSort : (activeFilters.sort || "newest");
+  const totalListings = Array.isArray(listings) ? listings.length : 0;
+  const verifiedCount = totalListings ? listings.filter((listing) => !listing.isFraud).length : 0;
+  const averagePrice = totalListings
+    ? Math.round(listings.reduce((sum, listing) => sum + Number(listing.price || 0), 0) / totalListings)
+    : 0;
+  const bestRating = totalListings
+    ? Math.max(...listings.map((listing) => Number(listing.avgRating || 0)))
+    : 0;
+  const filterChips = [
+    activeFilters.q ? "Keyword: " + activeFilters.q : "",
+    activeFilters.location ? "Location: " + activeFilters.location : "",
+    activeFilters.country ? "Country: " + activeFilters.country : "",
+    activeFilters.category ? "Category: " + activeFilters.category : "",
+    activeFilters.minPrice ? "Min Rs. " + Number(activeFilters.minPrice).toLocaleString("en-IN") : "",
+    activeFilters.maxPrice ? "Max Rs. " + Number(activeFilters.maxPrice).toLocaleString("en-IN") : ""
+  ].filter(Boolean);
+%>
 
 <section class="page-shell">
   <div class="page-heading split-heading">
@@ -13,23 +33,65 @@
     </div>
   </div>
 
+  <div class="discovery-insights">
+    <article>
+      <span>Results</span>
+      <strong><%= totalListings %></strong>
+    </article>
+    <article>
+      <span>Verified</span>
+      <strong><%= verifiedCount %></strong>
+    </article>
+    <article>
+      <span>Avg. nightly</span>
+      <strong>Rs. <%= averagePrice.toLocaleString("en-IN") %></strong>
+    </article>
+    <article>
+      <span>Top rating</span>
+      <strong><%= bestRating ? bestRating.toFixed(1) : "New" %></strong>
+    </article>
+  </div>
+
   <form action="/search" method="GET" class="filter-panel">
-    <input type="search" name="q" class="form-control" placeholder="Keyword" value="<%= typeof filters !== 'undefined' && filters.q ? filters.q : '' %>">
-    <input type="text" name="location" class="form-control" placeholder="Location" value="<%= typeof filters !== 'undefined' && filters.location ? filters.location : '' %>">
-    <input type="number" name="minPrice" class="form-control" placeholder="Min price" value="<%= typeof filters !== 'undefined' && filters.minPrice ? filters.minPrice : '' %>">
-    <input type="number" name="maxPrice" class="form-control" placeholder="Max price" value="<%= typeof filters !== 'undefined' && filters.maxPrice ? filters.maxPrice : '' %>">
+    <input type="search" name="q" class="form-control" placeholder="Keyword" value="<%= activeFilters.q || '' %>">
+    <input type="text" name="location" class="form-control" placeholder="Location" value="<%= activeFilters.location || '' %>">
+    <input type="number" name="minPrice" class="form-control" placeholder="Min price" value="<%= activeFilters.minPrice || '' %>">
+    <input type="number" name="maxPrice" class="form-control" placeholder="Max price" value="<%= activeFilters.maxPrice || '' %>">
     <select name="category" class="form-select">
       <option value="">All categories</option>
       <% ["Beach", "Mountains", "City", "Camping", "Islands"].forEach((category) => { %>
-        <option value="<%= category %>" <%= typeof filters !== 'undefined' && filters.category === category ? "selected" : "" %>><%= category %></option>
+        <option value="<%= category %>" <%= activeFilters.category === category ? "selected" : "" %>><%= category %></option>
       <% }) %>
+    </select>
+    <select name="sort" class="form-select">
+      <option value="newest" <%= sortValue === "newest" ? "selected" : "" %>>Newest</option>
+      <option value="rating" <%= sortValue === "rating" ? "selected" : "" %>>Top rated</option>
+      <option value="price_asc" <%= sortValue === "price_asc" ? "selected" : "" %>>Price low</option>
+      <option value="price_desc" <%= sortValue === "price_desc" ? "selected" : "" %>>Price high</option>
     </select>
     <button class="btn btn-dark" type="submit"><i class="fa-solid fa-sliders"></i> Filter</button>
   </form>
 
+  <% if (filterChips.length > 0) { %>
+    <div class="filter-chips" aria-label="Active filters">
+      <% filterChips.forEach((chip) => { %>
+        <span><%= chip %></span>
+      <% }) %>
+      <a href="/listings">Clear all</a>
+    </div>
+  <% } %>
+
   <% if (typeof isRecommendation !== 'undefined') { %>
     <div class="info-banner">Curated from your viewed listings, category preferences, and recent demand signals.</div>
   <% } %>
+
+  <div class="result-toolbar">
+    <p><strong><%= totalListings %></strong> stay<%= totalListings !== 1 ? "s" : "" %> shown</p>
+    <div class="density-toggle" aria-label="Listing density">
+      <button type="button" class="active" data-density="comfort" aria-label="Comfort view" title="Comfort view"><i class="fa-solid fa-grip"></i></button>
+      <button type="button" data-density="compact" aria-label="Compact view" title="Compact view"><i class="fa-solid fa-table-cells-large"></i></button>
+    </div>
+  </div>
 
   <div class="search-layout">
     <div>
@@ -39,14 +101,20 @@
           <p>Try a broader destination, lower price range, or a different category.</p>
         </div>
       <% } else { %>
-        <div class="listing-grid compact-grid">
+        <div class="listing-grid compact-grid" id="listingGrid">
           <% listings.forEach((listing, index) => { %>
             <% const isSaved = wishlistIds.includes(listing._id.toString()); %>
             <% const ecoScore = 72 + ((Number(listing.price) + index * 7) % 23); %>
             <% const impactValue = Math.max(900, Math.round(Number(listing.price || 0) * 0.18)); %>
             <article class="stay-card">
               <a href="/listings/<%= listing._id %>" class="image-link">
-                <img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700&auto=format&fit=crop' %>" alt="<%= listing.title %>" loading="lazy">
+                <img
+                  src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700&auto=format&fit=crop' %>"
+                  alt="<%= listing.title %>"
+                  loading="<%= index === 0 ? 'eager' : 'lazy' %>"
+                  decoding="async"
+                  fetchpriority="<%= index === 0 ? 'high' : 'auto' %>"
+                >
               </a>
 
               <div class="card-badges">

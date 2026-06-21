@@ -22,6 +22,8 @@
           <img
             src="<%= booking.listing?.image?.url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500' %>"
             alt="<%= booking.listing?.title || 'Booked stay' %>"
+            loading="lazy"
+            decoding="async"
           >
           <div>
             <h2><%= booking.listing?.title || "Listing unavailable" %></h2>
